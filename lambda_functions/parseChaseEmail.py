@@ -32,33 +32,40 @@ def lambda_handler(event, context):
             raise
     contents = email['Body'].read().decode('utf-8')
     (last_digits, date, amount, payee) = parse(contents)
+    print('Parsed result:', last_digits, date, amount, payee)
     save_to_db(message_id, last_digits, date, amount, payee)
 
 
 def parse(contents):
     '''Parse the contents of the email for transaction data.'''
     if 'Your Single Transaction Alert from Chase' not in contents:
+        print('Email does not match.  Exiting.')
         sys.exit(0)
+        
+    print('Email matches. Parsing contents.')
+        
     remainder = re.split(r'ending{0}in{0}'.format(WS), contents, 1)[1]
     last_digits = remainder[:NUM_DIGITS]
+    
     remainder = re.split(r'charge{0}of{0}\(\$USD\){0}'.format(WS),
                          remainder, 1)[1]
     remainder = re.split(r'{0}at{0}'.format(WS), remainder, 1)
     amount = remainder[0]
+    
     remainder = re.split(r'{0}has{0}been{0}authorized{0}on{0}'.format(WS),
                          remainder[1], 1)
     payee = remainder[0]
+    
     remainder = re.split(r'{0}at'.format(WS),remainder[1].rstrip(),1)
     date = format_date(remainder[0])
+    
     return (last_digits, date, amount, payee)
 
 
 def format_date(date):
     '''Convert dates to ISO 8601 (RFC 3339 "full-date") format.'''
     date = date.replace('\r\n', ' ')
-    print(f'this is the date: {date}')
     month_day_year = date.replace(',', '').split(' ')
-    print(month_day_year)
     month_and_day = datetime.strptime(f'{month_day_year[0]} {month_day_year[1]}', '%b %d')
     year= month_day_year[2]
     month = (f'{month_and_day:%m}') #formats datetime.month object to 2 digit string
