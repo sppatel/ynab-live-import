@@ -50,7 +50,7 @@ def parse(contents):
     remainder = re.split(r'charge{0}of{0}\(\$USD\){0}'.format(WS),
                          remainder, 1)[1]
     remainder = re.split(r'{0}at{0}'.format(WS), remainder, 1)
-    amount = remainder[0]
+    amount = remainder[0].replace(",", "")
     
     remainder = re.split(r'{0}has{0}been{0}authorized{0}on{0}'.format(WS),
                          remainder[1], 1)
