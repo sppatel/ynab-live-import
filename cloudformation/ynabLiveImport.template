@@ -19,9 +19,40 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
-                    "S3Bucket": "ynab-live-import-lambda-functions",
-                    "S3Key": "parseChaseEmail.zip",
-                    "S3ObjectVersion": ".axiH5PFT4dqBLL8__kcWmacYBrrzRYH"
+                    "S3Bucket": "sppatel-lambda-functions",
+                    "S3Key": "parseChaseEmail.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "bucket_name": {
+                            "Ref": "transactionEmails"
+                        },
+                        "table_name": {
+                            "Ref": "transactionData"
+                        }
+                    }
+                },
+                "FunctionName": "parseChaseEmail",
+                "Handler": "lambda_function.lambda_handler",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "transactionEmailParser",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.6",
+                "Timeout": 1
+            },
+            "DependsOn": [
+                "SourceCodeGetPolicy"
+            ]
+        },
+         "parseCFCUEmail": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "S3Bucket": "sppatel-lambda-functions",
+                    "S3Key": "parseCFCUEmail.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -52,9 +83,8 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
-                    "S3Bucket": "ynab-live-import-lambda-functions",
-                    "S3Key": "parseDiscoverEmail.zip",
-                    "S3ObjectVersion": "DgtTArQYjuMfbKxE92om1_VEmiO7xEZ_"
+                    "S3Bucket": "sppatel-lambda-functions",
+                    "S3Key": "parseDiscoverEmail.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -85,9 +115,8 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
-                    "S3Bucket": "ynab-live-import-lambda-functions",
-                    "S3Key": "postToYnab.zip",
-                    "S3ObjectVersion": "SHTQjsZg1NeBrlYYvEA9P1h674BhHeph"
+                    "S3Bucket": "sppatel-lambda-functions",
+                    "S3Key": "postToYnab.zip"
                 },
                 "Environment": {
                     "Variables": {
@@ -526,7 +555,7 @@
                         {
                             "Effect": "Allow",
                             "Action": "s3:GetObject",
-                            "Resource": "arn:aws:s3:::ynab-live-import-lambda-functions/*"
+                            "Resource": "arn:aws:s3:::sppatel-lambda-functions/*"
                         }
                     ]
                 },
