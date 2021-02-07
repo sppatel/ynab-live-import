@@ -3,15 +3,15 @@
     "Parameters": {
         "BudgetId": {
             "Type": "String",
-            "Description": "YNAB budget id"
+            "Description": "YNAB Budget Id"
         },
         "PersonalAccessToken": {
             "Type": "String",
-            "Description": "YNAB API personal access token"
+            "Description": "YNAB API Personal Access Token"
         },
         "Domain": {
             "Type": "String",
-            "Description": "Domain that receives transaction emails (example.com)"
+            "Description": "The domain that receives transaction emails (example.com)."
         }
     },
     "Resources": {
@@ -47,7 +47,7 @@
                 "SourceCodeGetPolicy"
             ]
         },
-         "parseCFCUEmail": {
+        "parseCFCUEmail": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Code": {
@@ -64,7 +64,7 @@
                         }
                     }
                 },
-                "FunctionName": "parseChaseEmail",
+                "FunctionName": "parseCFCUEmail",
                 "Handler": "lambda_function.lambda_handler",
                 "Role": {
                     "Fn::GetAtt": [
@@ -147,49 +147,6 @@
             },
             "DependsOn": [
                 "SourceCodeGetPolicy"
-            ]
-        },
-        "invokeChaseLambda": {
-            "Type": "AWS::SES::ReceiptRule",
-            "Properties": {
-                "After": {
-                    "Ref": "saveEmail"
-                },
-                "Rule": {
-                    "Recipients": [
-                        {
-                            "Fn::Join": [
-                                "",
-                                [
-                                    "chaseynab@",
-                                    {
-                                        "Ref": "Domain"
-                                    }
-                                ]
-                            ]
-                        }
-                    ],
-                    "Actions": [
-                        {
-                            "LambdaAction": {
-                                "FunctionArn": {
-                                    "Fn::GetAtt": [
-                                        "parseChaseEmail",
-                                        "Arn"
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    "Enabled": true,
-                    "Name": "invoke-chase-lambda"
-                },
-                "RuleSetName": {
-                    "Ref": "ynabLiveImportRuleSet"
-                }
-            },
-            "DependsOn": [
-                "ynabLiveImportRuleSet"
             ]
         },
         "saveEmail": {
@@ -440,46 +397,6 @@
                 ]
             }
         },
-        "invokeDiscoverLambda": {
-            "Type": "AWS::SES::ReceiptRule",
-            "Properties": {
-                "After": {
-                    "Ref": "invokeChaseLambda"
-                },
-                "Rule": {
-                    "Recipients": [
-                        {
-                            "Fn::Join": [
-                                "",
-                                [
-                                    "discoverynab@",
-                                    {
-                                        "Ref": "Domain"
-                                    }
-                                ]
-                            ]
-                        }
-                    ],
-                    "Actions": [
-                        {
-                            "LambdaAction": {
-                                "FunctionArn": {
-                                    "Fn::GetAtt": [
-                                        "parseDiscoverEmail",
-                                        "Arn"
-                                    ]
-                                }
-                            }
-                        }
-                    ],
-                    "Enabled": true,
-                    "Name": "invoke-discover-lambda"
-                },
-                "RuleSetName": {
-                    "Ref": "ynabLiveImportRuleSet"
-                }
-            }
-        },
         "emailsBucketPolicy": {
             "Type": "AWS::S3::BucketPolicy",
             "Properties": {
@@ -520,12 +437,164 @@
                 }
             }
         },
+        "SourceCodeGetPolicy": {
+            "Type": "AWS::IAM::ManagedPolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": "s3:GetObject",
+                            "Resource": "arn:aws:s3:::sppatel-lambda-functions/*"
+                        }
+                    ]
+                },
+                "ManagedPolicyName": "SourceCodeGetPolicy"
+            }
+        },
+        "invokeChaseLambda": {
+            "Type": "AWS::SES::ReceiptRule",
+            "Properties": {
+                "After": {
+                    "Ref": "saveEmail"
+                },
+                "Rule": {
+                    "Recipients": [
+                        {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "chaseynab@",
+                                    {
+                                        "Ref": "Domain"
+                                    }
+                                ]
+                            ]
+                        }
+                    ],
+                    "Actions": [
+                        {
+                            "LambdaAction": {
+                                "FunctionArn": {
+                                    "Fn::GetAtt": [
+                                        "parseChaseEmail",
+                                        "Arn"
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "Enabled": true,
+                    "Name": "invoke-chase-lambda"
+                },
+                "RuleSetName": {
+                    "Ref": "ynabLiveImportRuleSet"
+                }
+            },
+            "DependsOn": [
+                "ynabLiveImportRuleSet"
+            ]
+        },
+        "invokeCFCULambda": {
+            "Type": "AWS::SES::ReceiptRule",
+            "Properties": {
+                "After": {
+                    "Ref": "invokeChaseLambda"
+                },
+                "Rule": {
+                    "Recipients": [
+                        {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "discoverynab@",
+                                    {
+                                        "Ref": "Domain"
+                                    }
+                                ]
+                            ]
+                        }
+                    ],
+                    "Actions": [
+                        {
+                            "LambdaAction": {
+                                "FunctionArn": {
+                                    "Fn::GetAtt": [
+                                        "parseDiscoverEmail",
+                                        "Arn"
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "Enabled": true,
+                    "Name": "invoke-discover-lambda"
+                },
+                "RuleSetName": {
+                    "Ref": "ynabLiveImportRuleSet"
+                }
+            }
+        },
+        "invokeDiscoverLambda": {
+            "Type": "AWS::SES::ReceiptRule",
+            "Properties": {
+                "After": {
+                    "Ref": "invokeCFCULambda"
+                },
+                "Rule": {
+                    "Recipients": [
+                        {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "discoverynab@",
+                                    {
+                                        "Ref": "Domain"
+                                    }
+                                ]
+                            ]
+                        }
+                    ],
+                    "Actions": [
+                        {
+                            "LambdaAction": {
+                                "FunctionArn": {
+                                    "Fn::GetAtt": [
+                                        "parseDiscoverEmail",
+                                        "Arn"
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    "Enabled": true,
+                    "Name": "invoke-discover-lambda"
+                },
+                "RuleSetName": {
+                    "Ref": "ynabLiveImportRuleSet"
+                }
+            }
+        },
         "invokeChaseLambdaaPermission": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
                 "Action": "lambda:InvokeFunction",
                 "FunctionName": {
                     "Ref": "parseChaseEmail"
+                },
+                "Principal": "ses.amazonaws.com",
+                "SourceAccount": {
+                    "Ref": "AWS::AccountId"
+                }
+            }
+        },
+        "invokeCFCULambdaPermission": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Ref": "parseCFCUEmail"
                 },
                 "Principal": "ses.amazonaws.com",
                 "SourceAccount": {
@@ -544,22 +613,6 @@
                 "SourceAccount": {
                     "Ref": "AWS::AccountId"
                 }
-            }
-        },
-        "SourceCodeGetPolicy": {
-            "Type": "AWS::IAM::ManagedPolicy",
-            "Properties": {
-                "PolicyDocument": {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": "s3:GetObject",
-                            "Resource": "arn:aws:s3:::sppatel-lambda-functions/*"
-                        }
-                    ]
-                },
-                "ManagedPolicyName": "SourceCodeGetPolicy"
             }
         }
     }
