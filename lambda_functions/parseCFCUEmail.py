@@ -43,7 +43,7 @@ def parse(contents):
         sys.exit(0)
 
     print('Email matches. Parsing contents.')
-
+    
     remainder = re.split(r'Account:{0}'.format(WS), contents, 1)[1]
     last_digits = remainder.split(" ", 1)[0]
 
@@ -54,7 +54,10 @@ def parse(contents):
     if amount_raw == amount:
         amount = '-' + amount
 
-    payee = re.split(r'Description:(.*)\n', remainder)[1]
+    remainder = remainder.replace('\r\n', '')
+    remainder = remainder.replace('=', '')
+
+    payee = re.split(r'Description:(.*)<br\/><br\/>', remainder)[1]
 
     date = re.split(r'Date:\s(\d{1,2}\s[A-Za-z]{3}\s\d{4})', contents)[1].split(' ')
     date = format_date('{0} {1}, {2}'.format(date[1], date[0], date[2]))
