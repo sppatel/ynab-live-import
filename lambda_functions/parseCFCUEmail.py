@@ -47,14 +47,15 @@ def parse(contents):
     remainder = re.split(r'Account:{0}'.format(WS), contents, 1)[1]
     last_digits = remainder.split(" ", 1)[0]
 
-    amount_result = re.split(r'Amount:{0}(\(?\$(\d+\.\d\d)\))?'.format(WS), remainder)
-    amount_raw = amount_result[1].replace('$', '')
-    amount = amount_result[2]
+    amount_result = re.split(r'Amount:\s(\(?\$(.*\.\d{2})\)?)<br/>', remainder)
+    amount_raw, amount = amount_result[1], amount_result[2]
+    amount_raw = amount_result[1].replace('$', '').replace(',', '')
+    amount = amount_result[2].replace('$', '').replace(',', '')
 
     if amount_raw == amount:
         amount = '-' + amount
 
-    remainder = remainder.replace('\r\n', '')
+    remainder = remainder.replace('\n', '')
     remainder = remainder.replace('=', '')
 
     payee = re.split(r'Description:(.*)<br\/><br\/>', remainder)[1]
